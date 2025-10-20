@@ -11,7 +11,6 @@ class Business(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # ========== CREATE BUSINESS ==========
     @commands.hybrid_command(name='create_business', description='Create your own business')
     async def create_business(self, ctx, name: str, *, description: str):
         user_data = get_user_data(ctx.author.id)
@@ -63,7 +62,6 @@ class Business(commands.Cog):
         embed.add_field(name="📈 Work Bonus", value="1.5x", inline=True)
         await ctx.send(embed=embed)
 
-    # ========== BUSINESS LIST / APPLY ==========
     @commands.hybrid_command(name='business', description='View business information or apply to work')
     async def business(self, ctx, action: str = "list", *, business_name: str = None):
         businesses = load_data(BUSINESS_FILE)
@@ -90,7 +88,6 @@ class Business(commands.Cog):
             if not business_name:
                 await ctx.send("❌ Please specify which business you want to apply to!", ephemeral=True)
                 return
-            # Find business by name
             target_business = None
             for business in businesses.values():
                 if business['name'].lower() == business_name.lower():
@@ -105,7 +102,6 @@ class Business(commands.Cog):
             if str(ctx.author.id) in target_business['employees']:
                 await ctx.send(f"❌ You already work at **{target_business['name']}**!", ephemeral=True)
                 return
-            # Prompt user for application input
             await ctx.send("Why do you want to work here? (Type your answer below, 500 chars max)")
             def check(m):
                 return m.author == ctx.author and m.channel == ctx.channel
@@ -126,7 +122,6 @@ class Business(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.send("Timed out! Please try again.")
                 return
-            # Save application
             applications = load_data(APPLICATIONS_FILE)
             app_id = f"app_{ctx.author.id}_{target_business['id']}_{int(datetime.now().timestamp())}"
             applications[app_id] = {
@@ -142,7 +137,6 @@ class Business(commands.Cog):
                 'applied_at': datetime.now().isoformat()
             }
             save_data(APPLICATIONS_FILE, applications)
-            # DM business owner
             try:
                 owner = await self.bot.fetch_user(target_business['owner_id'])
                 if owner:
@@ -160,7 +154,6 @@ class Business(commands.Cog):
                 pass
             await ctx.send(f"✅ Your application to **{target_business['name']}** has been sent!", ephemeral=True)
 
-    # ========== MANAGE BUSINESS ==========
     @commands.hybrid_command(name='manage_business', description='Manage your business (owner only)')
     async def manage_business(self, ctx):
         businesses = load_data(BUSINESS_FILE)
@@ -172,7 +165,6 @@ class Business(commands.Cog):
         if not user_business:
             await ctx.send("❌ You don't own a business! Use `/create_business` to start one.", ephemeral=True)
             return
-        # Show management panel
         employee_list = []
         for emp_id, emp_data in user_business['employees'].items():
             employee_list.append(f"👤 {emp_data['name']} (Sessions: {emp_data['total_work_sessions']})")
@@ -190,9 +182,6 @@ class Business(commands.Cog):
         embed.add_field(name="💰 Work Bonus", value=f"{user_business['work_bonus']}x", inline=True)
         embed.add_field(name="👔 Total Hired", value=user_business['total_employees_hired'], inline=True)
         await ctx.send(embed=embed)
-        # Application approval/denial/firing via chat not implemented for brevity
-
-    # ========== UPGRADE BUSINESS ==========
     @commands.hybrid_command(name='upgrade_business', description='Upgrade your business with various improvements')
     async def upgrade_business(self, ctx):
         businesses = load_data(BUSINESS_FILE)
@@ -257,7 +246,6 @@ class Business(commands.Cog):
         save_data(BUSINESS_FILE, businesses)
         await ctx.send(f"✅ Upgrade purchased! {upgrades[chosen]['desc']}")
 
-    # ========== WORK COMMAND ==========
     @commands.hybrid_command(name='work', description='Work to earn money')
     async def work(self, ctx):
         user_data = get_user_data(ctx.author.id)
@@ -320,3 +308,4 @@ class Business(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Business(bot))
+
